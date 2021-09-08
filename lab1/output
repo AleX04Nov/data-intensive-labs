@@ -1,0 +1,8 @@
+Time spent on one thread with 100000 requests to database: 1.2159582 sec
+Time spent on 25 threads 100000 requests to database: 2.0843275 sec
+Time spent on 50 threads 100000 requests to database: 2.502643 sec
+Time spent on 100 threads 100000 requests to database: 5.2292732 sec
+Time spent on 150 threads 100000 requests to database: 6.0993851999999995 sec
+Time spent on 200 threads 100000 requests to database: 7.672283899999999 sec
+Time spent on 250 threads 100000 requests to database: 9.9475305 sec
+Time spent on 300 threads 100000 requests to database: 10.851630199999999 sec
