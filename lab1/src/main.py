@@ -18,11 +18,11 @@ def oneThread(kwargs: Mapping[str, Any]):
     valuesCount: int
     dbName = kwargs['dbName']
     valuesCount = kwargs['valuesCount']
-    con = sqlite3.connect(dbName, timeout=600)
+    con = sqlite3.connect(dbName, timeout=60000)
     cur = con.cursor()
     for value in range(valuesCount):
         cur.execute(f"INSERT INTO main (value) VALUES ({value})")
-    con.commit()
+        con.commit()
     con.close()
     return
 
@@ -36,6 +36,7 @@ def manyThreads(kwargs: Mapping[str, Any]):
     startValue: int
     endValue: int
     synchronizedStart: threading.Event
+    synchronizedStop: threading.Event
     newThread: threading.Thread
     threadArgs: Mapping[str, Any]
 
@@ -43,17 +44,17 @@ def manyThreads(kwargs: Mapping[str, Any]):
     valuesCount = kwargs['valuesCount']
     threadsCount = kwargs['threadsCount']
     synchronizedStart = threading.Event()
+    synchronizedStop = threading.Event()
     threadsList = list()
     valuesPerThread = int(valuesCount / threadsCount)
     startValue = 0
 
     for threadId in range(threadsCount - 1):
-
         threadArgs = {
                 'dbName': dbName,
                 'startValue': startValue,
                 'endValue': startValue + valuesPerThread,
-                'synchronizedStart': synchronizedStart
+                'synchronizedStart': synchronizedStart,
             }
         newThread = threading.Thread(
             target=manyThreadsThread,
@@ -67,7 +68,7 @@ def manyThreads(kwargs: Mapping[str, Any]):
             'dbName': dbName,
             'startValue': startValue,
             'endValue': valuesCount,
-            'synchronizedStart': synchronizedStart
+            'synchronizedStart': synchronizedStart,
         }
     newThread = threading.Thread(
         target=manyThreadsThread,
@@ -83,6 +84,7 @@ def manyThreads(kwargs: Mapping[str, Any]):
     for thread in threadsList:
         thread.join()
 
+
     return
 
 
@@ -90,19 +92,27 @@ def manyThreadsThread(kwargs: Mapping[str, Any]):
     dbName: str
     startValue: int
     endValue: int
+    con: sqlite3.Connection
     synchronizedStart: threading.Event
+    synchronizedStop: threading.Event
+    waitForStop: threading.Event
 
     dbName = kwargs['dbName']
     startValue = kwargs['startValue']
     endValue = kwargs['endValue']
     synchronizedStart = kwargs['synchronizedStart']
+    synchronizedStop = kwargs['synchronizedStop']
+    waitForStop = kwargs['waitForStopThread']
+
+
+    con = sqlite3.connect(dbName, timeout=60000)
+    cur = con.cursor()
+
     synchronizedStart.wait()
 
-    con = sqlite3.connect(dbName, timeout=600)
-    cur = con.cursor()
     for value in range(startValue, endValue):
         cur.execute(f"INSERT INTO main (value) VALUES ({value})")
-    con.commit()
+        con.commit()
     con.close()
     return
 
@@ -116,10 +126,10 @@ def functionTimer(function, kwargs: Mapping[str, Any]):
 
 
 def main():
-    prepareDB('../data/databaseA.db')
-    prepareDB('../data/databaseB.db')
-
     requestsCount = 100000
+
+
+    prepareDB('../data/databaseA.db')
     timeSpentOnOneThread = functionTimer(
         oneThread,
         {
@@ -129,17 +139,19 @@ def main():
     )
     print(f"Time spent on one thread with {requestsCount} requests to database: {timeSpentOnOneThread} sec")
 
-    threadsCount = 150
-    timeSpentOnManyThreads = functionTimer(
-        manyThreads,
-        {
-            'dbName': '../data/databaseB.db',
-            'valuesCount': requestsCount,
-            'threadsCount': threadsCount
-        }
-    )
 
-    print(f"Time spent on {threadsCount} threads {requestsCount} requests to database: {timeSpentOnManyThreads} sec")
+    for threadsCount in range(50, 301, 50):
+        prepareDB('../data/databaseB.db')
+        timeSpentOnManyThreads = functionTimer(
+            manyThreads,
+            {
+                'dbName': '../data/databaseB.db',
+                'valuesCount': requestsCount,
+                'threadsCount': threadsCount,
+            }
+        )
+
+        print(f"Time spent on {threadsCount} threads {requestsCount} requests to database: {timeSpentOnManyThreads} sec")
 
 
 if __name__ == "__main__":
