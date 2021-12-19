@@ -4,10 +4,10 @@ import pymongo as pymongo
 from bson import DBRef, ObjectId
 from pymongo.database import Database
 
-from src.comment import Comment
-from src.customer import Customer
-from src.items import *
-from src.orders import OrderMongo
+from lab2.src.comment import Comment
+from lab2.src.customer import Customer
+from lab2.src.items import *
+from lab2.src.orders import OrderMongo
 
 mongo_uri = "mongodb+srv://mongolab1:mongolab1@cluster0.h37b1.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 collection_names = ['orders', 'items', 'customers']

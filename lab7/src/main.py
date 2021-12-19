@@ -567,7 +567,7 @@ def map_reduce_incremental(db: Database):
 
 
 # TASK 12
-def monthly_analysis(db: Database, ch_year):
+def monthly_analysis(db: Database, year):
     map = """
 function () {
     var customer_key = this.customer.name + " " + this.customer.surname
@@ -630,7 +630,7 @@ function (key, reducedValue) {
     """
 
     scope = {
-        'check_year': ch_year
+        'check_year': year
     }
 
     pprint.pprint(db['orders'].inline_map_reduce(map=map, reduce=reduce, finalize=finalize, scope=scope))

@@ -1,0 +1,818 @@
+C:\Users\alexe\PycharmProjects\data-intensive-labs\venv\Scripts\python.exe C:\Users\alexe\PycharmProjects\data-intensive-labs\lab4\src\main.py
+C:\Users\alexe\PycharmProjects\data-intensive-labs\venv\lib\site-packages\cassandra\cqlengine\management.py:545: UserWarning: CQLENG_ALLOW_SCHEMA_MANAGEMENT environment variable is not set. Future versions of this package will require this variable to enable management functions.
+  warnings.warn(msg)
+#########################
+TASK 1
+CREATE TABLE lab4_keyspace.item (
+    category text,
+    price int,
+    producer text,
+    id int,
+    info map<text, text>,
+    model text,
+    PRIMARY KEY (category, price, producer)
+) WITH CLUSTERING ORDER BY (price ASC, producer ASC)
+    AND additional_write_policy = '99p'
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
+    AND compression = {'chunk_length_in_kb': '16', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1.0
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair = 'BLOCKING'
+    AND speculative_retry = '99p';
+CREATE INDEX item_info_entries_idx ON lab4_keyspace.item (entries(info));
+CREATE INDEX item_info_keys_idx ON lab4_keyspace.item (keys(info));
+CREATE INDEX item_model_idx ON lab4_keyspace.item (model);
+#########################
+TASK 2
+SELECT * FROM lab4_keyspace.item LIMIT 5
+How big result without limit:  200
+{
+    "category": "Phone",
+    "price": 579,
+    "producer": "Davis and Sons",
+    "id": 12,
+    "model": "Moore",
+    "info": {
+        "battery": "6867mAh",
+        "has4g": "True",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "BlackberryOS",
+        "resolution": "7680x4320"
+    }
+}
+{
+    "category": "Phone",
+    "price": 698,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 64,
+    "model": "Alexander",
+    "info": {
+        "battery": "4941mAh",
+        "has4g": "True",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "2048x1080"
+    }
+}
+{
+    "category": "Phone",
+    "price": 1120,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 11,
+    "model": "Leon",
+    "info": {
+        "battery": "8474mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "2048x1080"
+    }
+}
+{
+    "category": "Phone",
+    "price": 1498,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 66,
+    "model": "Obrien",
+    "info": {
+        "battery": "2015mAh",
+        "has4g": "False",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "1920x1080"
+    }
+}
+{
+    "category": "Phone",
+    "price": 1552,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 104,
+    "model": "Stewart",
+    "info": {
+        "battery": "7274mAh",
+        "has4g": "False",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "1280x720"
+    }
+}
+#########################
+TASK 2
+SELECT "price", "producer", "id", "model", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s ORDER BY "price" ASC LIMIT 5
+How big result without limit:  51
+{
+    "category": "TV",
+    "price": 3022,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 195,
+    "model": "Ayala",
+    "info": {
+        "os_name": "Philips Smart TV",
+        "resolution": "2048x1080",
+        "smartTV": "True",
+        "wifi": "True"
+    }
+}
+{
+    "category": "TV",
+    "price": 3163,
+    "producer": "Davis and Sons",
+    "id": 128,
+    "model": "Warren",
+    "info": {
+        "os_name": "Samsung Smart TV",
+        "resolution": "1280x720",
+        "smartTV": "True",
+        "wifi": "True"
+    }
+}
+{
+    "category": "TV",
+    "price": 3794,
+    "producer": "Johnson-Mora",
+    "id": 50,
+    "model": "Warner",
+    "info": {
+        "os_name": "Amazon TV-Box",
+        "resolution": "2560x1440",
+        "smartTV": "True",
+        "wifi": "False"
+    }
+}
+{
+    "category": "TV",
+    "price": 4225,
+    "producer": "Johnson-Mora",
+    "id": 52,
+    "model": "Rowe",
+    "info": {
+        "os_name": "Philips Smart TV",
+        "resolution": "3840x2160",
+        "smartTV": "True",
+        "wifi": "True"
+    }
+}
+{
+    "category": "TV",
+    "price": 4465,
+    "producer": "Davis and Sons",
+    "id": 14,
+    "model": "Williams",
+    "info": {
+        "os_name": "Amazon TV-Box",
+        "resolution": "1280x720",
+        "smartTV": "True",
+        "wifi": "True"
+    }
+}
+#########################
+TASK 3.1
+SELECT "price", "producer", "id", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s AND "model" = %(1)s LIMIT 5
+How big result without limit:  2
+{
+    "category": "Phone",
+    "price": 1120,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 11,
+    "model": "Leon",
+    "info": {
+        "battery": "8474mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "2048x1080"
+    }
+}
+{
+    "category": "Phone",
+    "price": 9466,
+    "producer": "Higgins and Sons",
+    "id": 47,
+    "model": "Leon",
+    "info": {
+        "battery": "9916mAh",
+        "has4g": "False",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "1920x1080"
+    }
+}
+#########################
+TASK 3.2
+SELECT "price", "producer", "id", "model", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s AND "price" > %(1)s AND "price" <= %(2)s LIMIT 5
+How big result without limit:  3
+{
+    "category": "Phone",
+    "price": 698,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 64,
+    "model": "Alexander",
+    "info": {
+        "battery": "4941mAh",
+        "has4g": "True",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "2048x1080"
+    }
+}
+{
+    "category": "Phone",
+    "price": 1120,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 11,
+    "model": "Leon",
+    "info": {
+        "battery": "8474mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "2048x1080"
+    }
+}
+{
+    "category": "Phone",
+    "price": 1498,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 66,
+    "model": "Obrien",
+    "info": {
+        "battery": "2015mAh",
+        "has4g": "False",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "1920x1080"
+    }
+}
+#########################
+TASK 3.3
+SELECT "price", "id", "model", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s AND "price" = %(1)s AND "producer" = %(2)s LIMIT 5
+How big result without limit:  1
+{
+    "category": "Phone",
+    "price": 579,
+    "producer": "Davis and Sons",
+    "id": 12,
+    "model": "Moore",
+    "info": {
+        "battery": "6867mAh",
+        "has4g": "True",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "BlackberryOS",
+        "resolution": "7680x4320"
+    }
+}
+#########################
+TASK 4.1
+Select * from lab4_keyspace.item Where info contains key 'has5g' LIMIT 5;
+How big result without limit:  45
+{
+    "category": "Phone",
+    "price": 579,
+    "producer": "Davis and Sons",
+    "id": 12,
+    "info": {
+        "battery": "6867mAh",
+        "has4g": "True",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "BlackberryOS",
+        "resolution": "7680x4320"
+    },
+    "model": "Moore"
+}
+{
+    "category": "Phone",
+    "price": 698,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 64,
+    "info": {
+        "battery": "4941mAh",
+        "has4g": "True",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "2048x1080"
+    },
+    "model": "Alexander"
+}
+{
+    "category": "Phone",
+    "price": 1120,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 11,
+    "info": {
+        "battery": "8474mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "2048x1080"
+    },
+    "model": "Leon"
+}
+{
+    "category": "Phone",
+    "price": 1498,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 66,
+    "info": {
+        "battery": "2015mAh",
+        "has4g": "False",
+        "has5g": "False",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "1920x1080"
+    },
+    "model": "Obrien"
+}
+{
+    "category": "Phone",
+    "price": 1552,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 104,
+    "info": {
+        "battery": "7274mAh",
+        "has4g": "False",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "1280x720"
+    },
+    "model": "Stewart"
+}
+#########################
+TASK 4.2
+Select * from lab4_keyspace.item Where info['has5g']='True' LIMIT 5;
+How big result without limit:  14
+{
+    "category": "Phone",
+    "price": 1120,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 11,
+    "info": {
+        "battery": "8474mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "2048x1080"
+    },
+    "model": "Leon"
+}
+{
+    "category": "Phone",
+    "price": 1552,
+    "producer": "Weaver, Ortiz and Wilson",
+    "id": 104,
+    "info": {
+        "battery": "7274mAh",
+        "has4g": "False",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Symbian",
+        "resolution": "1280x720"
+    },
+    "model": "Stewart"
+}
+{
+    "category": "Phone",
+    "price": 2455,
+    "producer": "Johnson-Mora",
+    "id": 98,
+    "info": {
+        "battery": "1736mAh",
+        "has4g": "False",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Android",
+        "resolution": "2560x1440"
+    },
+    "model": "Lloyd"
+}
+{
+    "category": "Phone",
+    "price": 4074,
+    "producer": "Lee, Mitchell and Fisher",
+    "id": 170,
+    "info": {
+        "battery": "3610mAh",
+        "has4g": "False",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Java",
+        "resolution": "1920x1080"
+    },
+    "model": "Miller"
+}
+{
+    "category": "Phone",
+    "price": 4694,
+    "producer": "Higgins and Sons",
+    "id": 4,
+    "info": {
+        "battery": "2896mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "Java",
+        "resolution": "1280x720"
+    },
+    "model": "Phillips"
+}
+#########################
+TASK 5.1
+SELECT "price", "id", "model", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s AND "price" = %(1)s AND "producer" = %(2)s LIMIT 10000
+{
+    "category": "Phone",
+    "price": 579,
+    "producer": "Davis and Sons",
+    "id": 12,
+    "model": "Moore",
+    "info": {
+        "battery": "6867mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "BlackberryOS",
+        "resolution": "7680x4320"
+    }
+}
+#########################
+TASK 5.2
+SELECT "price", "id", "model", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s AND "price" = %(1)s AND "producer" = %(2)s LIMIT 10000
+{
+    "category": "Phone",
+    "price": 579,
+    "producer": "Davis and Sons",
+    "id": 12,
+    "model": "Moore",
+    "info": {
+        "WOW_EFFECT": "OMG 100/12!!",
+        "battery": "6867mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "BlackberryOS",
+        "resolution": "7680x4320"
+    }
+}
+#########################
+TASK 5.3
+SELECT "price", "id", "model", "info" FROM lab4_keyspace.item WHERE "category" = %(0)s AND "price" = %(1)s AND "producer" = %(2)s LIMIT 10000
+{
+    "category": "Phone",
+    "price": 579,
+    "producer": "Davis and Sons",
+    "id": 12,
+    "model": "Moore",
+    "info": {
+        "battery": "6867mAh",
+        "has4g": "True",
+        "has5g": "True",
+        "hasGsm": "True",
+        "os_name": "BlackberryOS",
+        "resolution": "7680x4320"
+    }
+}
+#########################
+#########################
+#########################
+TASK 1
+CREATE TABLE lab4_keyspace.orders (
+    customer_name text,
+    date date,
+    id int,
+    items_id list<int>,
+    sum int,
+    PRIMARY KEY (customer_name, date, id)
+) WITH CLUSTERING ORDER BY (date ASC, id ASC)
+    AND additional_write_policy = '99p'
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
+    AND compression = {'chunk_length_in_kb': '16', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1.0
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair = 'BLOCKING'
+    AND speculative_retry = '99p';
+CREATE INDEX orders_items_id_idx ON lab4_keyspace.orders (values(items_id));
+#########################
+TASK 2
+SELECT "date", "id", "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s ORDER BY "date" ASC LIMIT 5
+How big result without limit:  5
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2020-02-02",
+    "id": 5,
+    "sum": 24617,
+    "items_id": [
+        167,
+        62,
+        118,
+        84,
+        194,
+        84,
+        20,
+        164,
+        144,
+        163
+    ]
+}
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2020-05-12",
+    "id": 6,
+    "sum": 45738,
+    "items_id": [
+        40,
+        130,
+        172,
+        140,
+        42,
+        170,
+        93
+    ]
+}
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2020-09-27",
+    "id": 34,
+    "sum": 39471,
+    "items_id": [
+        84,
+        95,
+        141,
+        5,
+        163,
+        136,
+        91,
+        70
+    ]
+}
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2021-11-05",
+    "id": 30,
+    "sum": 13464,
+    "items_id": [
+        55
+    ]
+}
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2021-12-03",
+    "id": 18,
+    "sum": 44871,
+    "items_id": [
+        126,
+        131,
+        61,
+        137,
+        195,
+        14,
+        5,
+        150,
+        111
+    ]
+}
+#########################
+TASK 3
+SELECT "date", "id", "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s AND "items_id" CONTAINS %(1)s LIMIT 5
+How big result without limit:  1
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2021-11-05",
+    "id": 30,
+    "sum": 13464,
+    "items_id": [
+        55
+    ]
+}
+#########################
+TASK 4
+SELECT "date", "id", "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s AND "date" > %(1)s LIMIT 5
+How big result without limit:  3
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2020-09-27",
+    "id": 34,
+    "sum": 39471,
+    "items_id": [
+        84,
+        95,
+        141,
+        5,
+        163,
+        136,
+        91,
+        70
+    ]
+}
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2021-11-05",
+    "id": 30,
+    "sum": 13464,
+    "items_id": [
+        55
+    ]
+}
+{
+    "customer_name": "Ashley Wolf",
+    "date": "2021-12-03",
+    "id": 18,
+    "sum": 44871,
+    "items_id": [
+        126,
+        131,
+        61,
+        137,
+        195,
+        14,
+        5,
+        150,
+        111
+    ]
+}
+#########################
+TASK 5
+SELECT customer_name, AVG(sum) FROM lab4_keyspace.orders GROUP BY customer_name LIMIT 5
+{
+    "customer_name": "Caitlin Griffin",
+    "system.avg(sum)": 23631
+}
+{
+    "customer_name": "Brian Anderson",
+    "system.avg(sum)": 53761
+}
+{
+    "customer_name": "Ashley Wolf",
+    "system.avg(sum)": 33632
+}
+{
+    "customer_name": "Eric Moreno",
+    "system.avg(sum)": 39363
+}
+{
+    "customer_name": "Christopher Porter",
+    "system.avg(sum)": 44695
+}
+#########################
+TASK 6
+SELECT customer_name, SUM(sum) FROM lab4_keyspace.orders GROUP BY customer_name LIMIT 5
+{
+    "customer_name": "Caitlin Griffin",
+    "system.sum(sum)": 47263
+}
+{
+    "customer_name": "Brian Anderson",
+    "system.sum(sum)": 161284
+}
+{
+    "customer_name": "Ashley Wolf",
+    "system.sum(sum)": 168161
+}
+{
+    "customer_name": "Eric Moreno",
+    "system.sum(sum)": 196818
+}
+{
+    "customer_name": "Christopher Porter",
+    "system.sum(sum)": 134085
+}
+#########################
+TASK 7
+SELECT customer_name, MAX(sum) FROM lab4_keyspace.orders GROUP BY customer_name LIMIT 5
+{
+    "customer_name": "Caitlin Griffin",
+    "system.max(sum)": 34467
+}
+{
+    "customer_name": "Brian Anderson",
+    "system.max(sum)": 70990
+}
+{
+    "customer_name": "Ashley Wolf",
+    "system.max(sum)": 45738
+}
+{
+    "customer_name": "Eric Moreno",
+    "system.max(sum)": 77029
+}
+{
+    "customer_name": "Christopher Porter",
+    "system.max(sum)": 59292
+}
+#########################
+TASK 8
+SELECT "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s AND "date" = %(1)s AND "id" = %(2)s LIMIT 10000
+BEFORE
+{
+    "customer_name": "Laura Rubio",
+    "date": "2020-03-05",
+    "id": 29,
+    "sum": 7365,
+    "items_id": [
+        160,
+        120,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    ]
+}
+AFTER
+{
+    "customer_name": "Laura Rubio",
+    "date": "2020-03-05",
+    "id": 29,
+    "sum": 7426,
+    "items_id": [
+        160,
+        120,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    ]
+}
+#########################
+TASK 9
+SELECT WRITETIME(sum), id FROM lab4_keyspace.orders LIMIT 5
+{
+    "writetime(sum)": 1639892642232300,
+    "id": 25
+}
+{
+    "writetime(sum)": 1639892642232300,
+    "id": 14
+}
+{
+    "writetime(sum)": 1639892642232300,
+    "id": 27
+}
+{
+    "writetime(sum)": 1639892642232300,
+    "id": 41
+}
+{
+    "writetime(sum)": 1639892642232300,
+    "id": 10
+}
+#########################
+TASK 10
+SELECT "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s AND "date" = %(1)s AND "id" = %(2)s LIMIT 10000
+{
+    "customer_name": "Arooka Zooka",
+    "date": "2022-01-01",
+    "id": 9999,
+    "sum": 0,
+    "items_id": []
+}
+After 10 sec
+SELECT "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s AND "date" = %(1)s AND "id" = %(2)s LIMIT 10000
+#########################
+TASK 11
+SELECT json * FROM lab4_keyspace.orders LIMIT 1
+"{\"customer_name\": \"Caitlin Griffin\", \"date\": \"2020-11-18\", \"id\": 25, \"items_id\": [43, 174, 34, 112], \"sum\": 34467}"
+#########################
+TASK 12
+INSERT INTO lab4_keyspace.orders JSON '{"customer_name": "Colton Tiffany Lyons", "date": "2002-02-02", "id": "6087562", "items_id": [], "sum": 0}' IF NOT EXISTS
+SELECT "sum", "items_id" FROM lab4_keyspace.orders WHERE "customer_name" = %(0)s AND "date" = %(1)s AND "id" = %(2)s LIMIT 10000
+{
+    "customer_name": "Colton Tiffany Lyons",
+    "date": "2002-02-02",
+    "id": 6087562,
+    "sum": 0,
+    "items_id": []
+}
+
+Process finished with exit code 0
