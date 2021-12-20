@@ -1,0 +1,4 @@
+100k SQL:           1100    sec
+100k MongoDB:       260     sec
+100k cASSandra:     1911    sec Using db_add_rows_insert
+100k cASSandra:     1555    sec Using db_add_rows
